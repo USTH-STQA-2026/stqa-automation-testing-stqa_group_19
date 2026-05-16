@@ -23,7 +23,7 @@ Sử dụng **Playwright + Python** để kiểm thử hệ thống Mượn sác
 
 | #   | MSSV | Họ và tên | Vai trò     |
 | --- | ---- | --------- | ----------- |
-| 1   |      |           | Nhóm trưởng |
+| 1   |   23BA14076   |   Nguyễn Tùng Dương        | Nhóm trưởng |
 | 2   |  23BA14075    | Phạm Đình Ánh Dương          | Thành viên  |
 | 3   |  23BA14056    | Nguyễn Minh Đức          | Thành viên  |
 | 4   |  23BA14138    |     Hà Đăng Huy      | Thành viên  |
