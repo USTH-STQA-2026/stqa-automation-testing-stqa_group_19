@@ -27,7 +27,7 @@ Sử dụng **Playwright + Python** để kiểm thử hệ thống Mượn sác
 | 2   |  23BA14075    | Phạm Đình Ánh Dương          | Thành viên  |
 | 3   |  23BA14056    | Nguyễn Minh Đức          | Thành viên  |
 | 4   |  23BA14138    |     Hà Đăng Huy      | Thành viên  |
-| 5   |      |           | Thành viên  |
+| 5   |  23BA14137    |  Tạ Quang Huy         | Thành viên  |
 
 ---
 
