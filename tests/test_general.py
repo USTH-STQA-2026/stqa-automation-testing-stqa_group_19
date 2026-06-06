@@ -41,7 +41,26 @@ def test_logout(page, test_config):
            (*Assert: có nút "Đăng nhập" hoặc ô input Email*)
     """
     # TODO: Students implement here (Sinh viên viết code ở đây)
-    pytest.skip("Not implemented — student must complete (Chưa hoàn thành)")
+    """TC-11: Logout success (*Đăng xuất thành công*)"""
+    
+    # Bước 1: Tiền điều kiện - Đăng nhập vào hệ thống
+    login(page, test_config)
+
+    # Bước 2: Thực hiện hành động - Click nút Đăng xuất
+    flutter_click_button(page, "Đăng xuất")
+
+    # Bước 3: Chờ giao diện render và bật lại Semantics Tree
+    page.wait_for_timeout(3000)
+    enable_flutter_semantics(page)
+    
+    # (Tùy chọn) Chụp ảnh màn hình để debug/làm bằng chứng report
+    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "tc11_logout_success.png"))
+
+    # Bước 4: Test Oracle - Xác minh hệ thống đã quay lại trang Login
+    sem_text = " ".join(page.locator("flt-semantics").all_text_contents())
+    assert "Đăng nhập" in sem_text or "Email" in sem_text, \
+        "Lỗi: Không tìm thấy giao diện Đăng nhập sau khi bấm Đăng xuất!"
+    # pytest.skip("Not implemented — student must complete (Chưa hoàn thành)")
 
 
 def test_switch_language_to_english(page, test_config):
@@ -61,4 +80,26 @@ def test_switch_language_to_english(page, test_config):
         5. Assert: "Logout" or "Borrow" or "Library" in sem_text
     """
     # TODO: Students implement here (Sinh viên viết code ở đây)
-    pytest.skip("Not implemented — student must complete (Chưa hoàn thành)")
+    """TC-12: Switch language to English (*Chuyển ngôn ngữ sang tiếng Anh*)"""
+    
+    # Bước 1: Tiền điều kiện - Đăng nhập vào hệ thống
+    login(page, test_config)
+
+    # Bước 2: Thực hiện hành động - Click nút chuyển sang tiếng Anh
+    flutter_click_button(page, "EN")
+
+    # Bước 3: Chờ Flutter update state và render lại Semantics
+    page.wait_for_timeout(2000)
+    enable_flutter_semantics(page)
+    
+    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "tc12_switch_language_en.png"))
+
+    # Bước 4 & 5: Test Oracle - Xác minh text trên UI đã chuyển sang tiếng Anh
+    sem_text = " ".join(page.locator("flt-semantics").all_text_contents())
+    
+    # Dùng hàm any() để kiểm tra nếu có ít nhất 1 từ khóa tiếng Anh xuất hiện
+    english_keywords = ["Logout", "Borrow", "Search", "Library"]
+    has_english_text = any(keyword in sem_text for keyword in english_keywords)
+    
+    assert has_english_text, \
+        f"Lỗi: Giao diện chưa chuyển ngôn ngữ! Text thu được: {sem_text[:200]}..."

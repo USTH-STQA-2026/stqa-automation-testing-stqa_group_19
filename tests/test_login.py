@@ -90,7 +90,32 @@ def test_login_fail_wrong_password(page, test_config):
            (*Assert: URL vẫn ở trang đăng nhập HOẶC có thông báo lỗi*)
     """
     # TODO: Students implement here (Sinh viên viết code ở đây)
-    pytest.skip("Not implemented — student must complete (Chưa hoàn thành)")
+    """TC-02: Login fail – wrong password (*Đăng nhập thất bại – sai mật khẩu*)"""
+    
+    # [R] Reachability: Truy cập trang đăng nhập
+    page.goto(test_config["base_url"], wait_until="networkidle", timeout=60000)
+    enable_flutter_semantics(page)
+
+    # [I] Infection: Nhập email đúng nhưng mật khẩu sai
+    flutter_fill(page, "Email", test_config["email"])
+    flutter_fill(page, "Mật khẩu", "mat_khau_sai_123456")
+    flutter_click_button(page, "Đăng nhập")
+
+    # [P] Propagation: Đợi UI cập nhật sau khi gọi API thất bại. 
+    # (Dùng wait_for_timeout vì không rõ chính xác text báo lỗi để dùng Smart Wait)
+    page.wait_for_timeout(3000)
+    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "login_fail_wrong_password.png"))
+
+    # [R✓] Revealability: Kiểm tra kết quả
+    sem_text = " ".join(page.locator("flt-semantics").all_text_contents())
+    
+    # Oracle: Phải chắc chắn không xuất hiện nút "Đăng xuất" (Tức là đang ở trạng thái chưa login)
+    assert "Đăng xuất" not in sem_text and "Logout" not in sem_text, \
+        "Lỗi nghiêm trọng: Nhập sai mật khẩu nhưng hệ thống vẫn cho phép đăng nhập!"
+        
+    # (Tuỳ chọn) Nếu bạn biết text lỗi cụ thể, có thể mở comment dòng dưới:
+    # assert "thông tin không chính xác" in sem_text.lower(), "Không tìm thấy thông báo lỗi phù hợp"    
+    # pytest.skip("Not implemented — student must complete (Chưa hoàn thành)")
 
 
 def test_login_fail_empty_fields(page, test_config):
@@ -111,4 +136,22 @@ def test_login_fail_empty_fields(page, test_config):
         4. Assert: URL still on login page (*Assert: URL vẫn ở trang đăng nhập*)
     """
     # TODO: Students implement here (Sinh viên viết code ở đây)
-    pytest.skip("Not implemented — student must complete (Chưa hoàn thành)")
+    """TC-03: Login fail – empty fields (*Đăng nhập thất bại – để trống các trường*)"""
+    
+    # [R] Reachability
+    page.goto(test_config["base_url"], wait_until="networkidle", timeout=60000)
+    enable_flutter_semantics(page)
+
+    # [I] Infection: Bỏ trống form, click Đăng nhập ngay lập tức
+    flutter_click_button(page, "Đăng nhập")
+
+    # [P] Propagation: Đợi hệ thống xử lý validation
+    page.wait_for_timeout(2000)
+    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "login_fail_empty_fields.png"))
+
+    # [R✓] Revealability
+    sem_text = " ".join(page.locator("flt-semantics").all_text_contents())
+    
+    assert "Đăng xuất" not in sem_text, \
+        "Lỗi nghiêm trọng: Để trống form nhưng hệ thống vẫn cho phép đăng nhập!"
+    # pytest.skip("Not implemented — student must complete (Chưa hoàn thành)")
