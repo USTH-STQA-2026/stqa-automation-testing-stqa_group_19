@@ -10,41 +10,16 @@ BASE_URL = os.getenv("BASE_URL", "https://stqa.rbc.vn")
 TEST_EMAIL = os.getenv("TEST_EMAIL", "")
 TEST_PASSWORD = os.getenv("TEST_PASSWORD", "")
 TEST_DISPLAY_NAME = os.getenv("TEST_DISPLAY_NAME", "")
+
 SCREENSHOT_DIR = os.path.join(os.path.dirname(__file__), "screenshots")
 os.makedirs(SCREENSHOT_DIR, exist_ok=True)
-
 
 # ---------------------------------------------------------------------------
 # Smart Wait — Chờ thông minh (thay vì time.sleep)
 # ---------------------------------------------------------------------------
-# Playwright hỗ trợ auto-wait cho hầu hết thao tác (click, fill, assert).
-# Tuy nhiên, Flutter Web (CanvasKit) render toàn bộ UI trên <canvas>, nên
-# Semantics Tree cần thời gian cập nhật sau mỗi thay đổi giao diện.
-#
-# ✅ Nên dùng:
-#   wait_for_flutter(page, text="Đăng xuất")      # Chờ text xuất hiện
-#   page.locator("...").wait_for(timeout=5000)     # Chờ element cụ thể
-#
-# ❌ Tránh dùng:
-#   time.sleep(3)    # Hard sleep — chậm, không ổn định (flaky)
-# ---------------------------------------------------------------------------
-
-
 def wait_for_flutter(page, text=None, selector=None, timeout=10000):
-    """Smart Wait: chờ Flutter Semantics Tree cập nhật.
-
-    Args:
-        text: Chờ text xuất hiện trong flt-semantics
-        selector: Chờ CSS selector khớp element
-        timeout: Thời gian tối đa (ms), mặc định 10s
-
-    Examples:
-        wait_for_flutter(page)                              # Chờ semantics sẵn sàng
-        wait_for_flutter(page, text="Đăng xuất")            # Chờ thấy "Đăng xuất"
-        wait_for_flutter(page, selector='input[aria-label="Email"]')
-    """
+    """Smart Wait: chờ Flutter Semantics Tree cập nhật."""
     if text:
-        # Flutter Web dùng cả textContent và aria-label — chờ cả hai
         page.locator(
             f'flt-semantics:has-text("{text}"), flt-semantics[aria-label*="{text}"]'
         ).first.wait_for(state="attached", timeout=timeout)
@@ -56,7 +31,6 @@ def wait_for_flutter(page, text=None, selector=None, timeout=10000):
 
 @pytest.fixture(scope="session")
 def browser():
-    # Use explicit HEADLESS env so CI can choose headed mode with xvfb when needed.
     headless = os.getenv("HEADLESS", "false").lower() == "true"
     with sync_playwright() as p:
         browser = p.chromium.launch(
@@ -89,8 +63,7 @@ def test_config():
 
 @pytest.fixture()
 def web_tech(page) -> WebTech:
-    """Phát hiện công nghệ web và trả về WebTech object.
-    Dùng trong test để biết trang đang dùng công nghệ gì."""
+    """Phát hiện công nghệ web và trả về WebTech object."""
     page.goto(BASE_URL, wait_until="networkidle", timeout=60000)
     page.locator("flt-glass-pane").wait_for(state="attached", timeout=15000)
     tech = detect_technology(page)
@@ -102,9 +75,7 @@ def web_tech(page) -> WebTech:
 
 
 def enable_flutter_semantics(page, timeout=15000):
-    """Bật Flutter Semantics Tree để tạo DOM elements tương tác được.
-    Tự động chờ Flutter render xong trước khi bật (Smart Wait)."""
-    # Already enabled.
+    """Bật Flutter Semantics Tree để tạo DOM elements tương tác được."""
     if page.locator("flt-semantics").count() > 0:
         return
 
@@ -114,7 +85,6 @@ def enable_flutter_semantics(page, timeout=15000):
         enable_btn.focus()
         enable_btn.dispatch_event("click")
     except Exception:
-        # Fallback for headless runs where placeholder click is flaky.
         page.keyboard.press("Tab")
         page.keyboard.press("Enter")
 
@@ -130,7 +100,6 @@ def flutter_fill(page, label, value):
     field.wait_for(state="attached", timeout=10000)
     field.click()
 
-    # Flutter tạo input ẩn khi editing — chờ nó xuất hiện thay vì sleep
     active_input = page.locator("flt-text-editing-host input, flt-text-editing-host textarea")
     try:
         active_input.first.wait_for(state="attached", timeout=3000)
@@ -145,18 +114,8 @@ def flutter_click_button(page, text):
     btn.click()
 
 
-# ---------------------------------------------------------------------------
-# Universal helpers — tự chọn chiến lược theo công nghệ web
-# ---------------------------------------------------------------------------
-
 def smart_fill(page, label, value, tech: WebTech = None):
-    """Nhập text vào field — tự chọn cách tương tác phù hợp.
-
-    Args:
-        label: aria-label (Flutter) hoặc placeholder/label (HTML thường)
-        value: Giá trị cần nhập
-        tech:  WebTech object (nếu None sẽ tự detect)
-    """
+    """Nhập text vào field — tự chọn cách tương tác phù hợp."""
     if tech is None:
         tech = detect_technology(page)
 
@@ -164,7 +123,6 @@ def smart_fill(page, label, value, tech: WebTech = None):
         enable_flutter_semantics(page)
         flutter_fill(page, label, value)
     else:
-        # HTML thường: tìm theo label, placeholder, hoặc aria-label (fallback chain)
         by_label = page.get_by_label(label)
         if by_label.count() > 0:
             by_label.first.fill(value)
@@ -183,18 +141,12 @@ def login(page, test_config):
     flutter_fill(page, "Email", test_config["email"])
     flutter_fill(page, "Mật khẩu", test_config["password"])
     flutter_click_button(page, "Đăng nhập")
-    # Smart Wait: chờ trang chính load — nút "Đăng xuất" xuất hiện
     wait_for_flutter(page, text="Đăng xuất")
     enable_flutter_semantics(page)
 
 
 def smart_click(page, text, tech: WebTech = None):
-    """Click button — tự chọn cách tương tác phù hợp.
-
-    Args:
-        text: Text hiển thị trên button
-        tech: WebTech object (nếu None sẽ tự detect)
-    """
+    """Click button — tự chọn cách tương tác phù hợp."""
     if tech is None:
         tech = detect_technology(page)
 
@@ -202,5 +154,4 @@ def smart_click(page, text, tech: WebTech = None):
         enable_flutter_semantics(page)
         flutter_click_button(page, text)
     else:
-        # HTML thường: tìm button theo text
         page.get_by_role("button", name=text).click()
