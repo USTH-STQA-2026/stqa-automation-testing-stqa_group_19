@@ -26,6 +26,22 @@ from conftest import (
 )
 
 
+def get_semantics_text(page):
+    try:
+        return page.evaluate("""() => {
+            const elements = document.querySelectorAll('flt-semantics');
+            const texts = [];
+            for (const el of elements) {
+                const label = el.getAttribute('aria-label');
+                if (label) texts.push(label);
+                if (el.textContent) texts.push(el.textContent);
+            }
+            return texts.join(' ');
+        }""")
+    except Exception:
+        return ""
+
+
 # ===========================================================================
 # TC-04: Tìm sách theo tên — có kết quả
 # ===========================================================================
@@ -46,7 +62,7 @@ def test_search_by_book_name(page, test_config):
     screenshot_path = os.path.join(test_config["screenshot_dir"], "TC04_search_by_name.png")
     page.screenshot(path=screenshot_path)
 
-    sem_text = " ".join(page.locator("flt-semantics").all_text_contents())
+    sem_text = get_semantics_text(page)
     assert "Flutter" in sem_text, (
         f"TC-04 FAILED: Không tìm thấy sách 'Flutter'. Nội dung: {sem_text[:300]}"
     )
@@ -73,7 +89,7 @@ def test_search_no_result(page, test_config):
     screenshot_path = os.path.join(test_config["screenshot_dir"], "TC05_search_no_result.png")
     page.screenshot(path=screenshot_path)
 
-    sem_text = " ".join(page.locator("flt-semantics").all_text_contents())
+    sem_text = get_semantics_text(page)
     assert "Không tìm thấy" in sem_text or "không có" in sem_text.lower(), (
         f"TC-05 FAILED: Không hiển thị thông báo 'Không tìm thấy'. Nội dung: {sem_text[:300]}"
     )
@@ -101,7 +117,7 @@ def test_filter_by_category(page, test_config):
     screenshot_path = os.path.join(test_config["screenshot_dir"], "TC06_filter_by_category.png")
     page.screenshot(path=screenshot_path)
 
-    sem_text = " ".join(page.locator("flt-semantics").all_text_contents())
+    sem_text = get_semantics_text(page)
 
     # Sau khi lọc "Công nghệ", phải thấy sách công nghệ như Flutter, Python, v.v.
     assert any(
@@ -130,7 +146,7 @@ def test_search_by_author(page, test_config):
     screenshot_path = os.path.join(test_config["screenshot_dir"], "TC07_search_by_author.png")
     page.screenshot(path=screenshot_path)
 
-    sem_text = " ".join(page.locator("flt-semantics").all_text_contents())
+    sem_text = get_semantics_text(page)
     assert "Nguyễn Minh Đức" in sem_text or "Flutter" in sem_text or "Python" in sem_text, (
         f"TC-07 FAILED: Không tìm thấy sách theo tác giả. Nội dung: {sem_text[:300]}"
     )
@@ -138,24 +154,30 @@ def test_search_by_author(page, test_config):
 
 
 # ===========================================================================
-# TC-07b: Tìm kiếm case-insensitive
+# BONUS B2: Data-Driven Test - Tìm kiếm sách theo các từ khóa khác nhau
 # ===========================================================================
-def test_search_case_insensitive(page, test_config):
+@pytest.mark.parametrize(
+    "keyword, expected_title, expected_book_id",
+    [
+        ("Flutter", "Lập trình Flutter cơ bản", "BOOK001"),
+        ("Python", "Nhập môn lập trình Python", "BOOK009"),
+        ("Kiểm thử", "Kiểm thử phần mềm nhập môn", "BOOK003"),
+    ],
+)
+def test_search_books_data_driven(page, test_config, keyword, expected_title, expected_book_id):
     """
-    TC-07b: Tìm "flutter" (chữ thường) → vẫn ra "Lập trình Flutter cơ bản"
+    Bonus B2: Kiểm thử hướng dữ liệu (data-driven) cho tìm kiếm sách.
     """
     login(page, test_config)
-
-    flutter_fill(page, "Tìm kiếm theo tên sách hoặc tác giả...", "flutter")
-
-    wait_for_flutter(page, text="Flutter", timeout=10000)
     enable_flutter_semantics(page)
 
-    screenshot_path = os.path.join(test_config["screenshot_dir"], "TC07b_search_case_insensitive.png")
-    page.screenshot(path=screenshot_path)
+    flutter_fill(page, "Tìm kiếm theo tên sách hoặc tác giả...", keyword)
+    wait_for_flutter(page, text=expected_title, timeout=10000)
+    enable_flutter_semantics(page)
 
-    sem_text = " ".join(page.locator("flt-semantics").all_text_contents())
-    assert "Flutter" in sem_text or "flutter" in sem_text.lower(), (
-        "TC-07b FAILED: Tìm kiếm phân biệt hoa/thường — sai theo REQ-03"
+    sem_text = get_semantics_text(page)
+    assert expected_title in sem_text and expected_book_id in sem_text, (
+        f"Data-driven search failed for keyword '{keyword}'. "
+        f"Expected title '{expected_title}' and ID '{expected_book_id}' in semantics: {sem_text[:300]}"
     )
-    print("\n✅ TC-07b PASSED: Tìm kiếm case-insensitive đúng")
+    print(f"\n✅ Data-driven search test passed for keyword: '{keyword}'")

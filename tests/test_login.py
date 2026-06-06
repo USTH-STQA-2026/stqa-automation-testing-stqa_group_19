@@ -83,7 +83,7 @@ def test_login_wrong_password(page, test_config):
     flutter_click_button(page, "Đăng nhập")
 
     # Chờ thông báo lỗi xuất hiện
-    wait_for_flutter(page, text="Mật khẩu", timeout=10000)
+    wait_for_flutter(page, text="không đúng", timeout=10000)
     enable_flutter_semantics(page)
 
     # Chụp màn hình
@@ -143,32 +143,32 @@ def test_login_empty_fields(page, test_config):
 
 
 # ===========================================================================
-# BONUS: TC-03b — Đăng nhập thất bại — email không tồn tại
-# REQ-01: Email sai → "Không tìm thấy thành viên"
+# BONUS B2: Data-Driven Test - Đăng nhập thất bại với nhiều bộ dữ liệu
 # ===========================================================================
-def test_login_email_not_found(page, test_config):
+@pytest.mark.parametrize(
+    "email, password, expected_error",
+    [
+        ("librarian@library.com", "wrongpassword123", "mật khẩu"),
+        ("noone@notexist.com", "anypassword", "thành viên"),
+        ("", "", "Vui lòng"),
+    ],
+)
+def test_login_failures_data_driven(page, test_config, email, password, expected_error):
     """
-    TC-03b: Đăng nhập với email không tồn tại trong DB
-    - Dữ liệu: noone@notexist.com / anypassword
-    - Kết quả mong đợi: "Không tìm thấy thành viên"
+    Bonus B2: Kiểm thử hướng dữ liệu (data-driven) cho các kịch bản đăng nhập lỗi.
     """
     page.goto(test_config["base_url"], wait_until="networkidle", timeout=60000)
     enable_flutter_semantics(page)
 
-    flutter_fill(page, "Email", "noone@notexist.com")
-    flutter_fill(page, "Mật khẩu", "anypassword")
+    flutter_fill(page, "Email", email)
+    flutter_fill(page, "Mật khẩu", password)
     flutter_click_button(page, "Đăng nhập")
 
-    # Chờ thông báo lỗi
-    wait_for_flutter(page, text="thành viên", timeout=10000)
+    wait_for_flutter(page, text=expected_error, timeout=10000)
     enable_flutter_semantics(page)
 
-    screenshot_path = os.path.join(test_config["screenshot_dir"], "TC03b_login_email_not_found.png")
-    page.screenshot(path=screenshot_path)
-
     sem_text = " ".join(page.locator("flt-semantics").all_text_contents())
-    assert "Không tìm thấy" in sem_text or "thành viên" in sem_text.lower(), (
-        f"TC-03b FAILED: Không hiển thị thông báo lỗi email. Nội dung: {sem_text[:200]}"
+    assert expected_error in sem_text or expected_error.lower() in sem_text.lower(), (
+        f"Expected error '{expected_error}' not found in semantics text: {sem_text[:200]}"
     )
-
-    print("\n✅ TC-03b PASSED: Đăng nhập thất bại khi email không tồn tại")
+    print(f"\n✅ Data-driven login failure test passed for credentials: '{email}' / '{password}'")
