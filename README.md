@@ -17,9 +17,9 @@ Sử dụng **Playwright + Python** để kiểm thử hệ thống Mượn sác
 
 |              | Thông tin                    |
 | ------------ | ---------------------------- |
-| **Tên nhóm** | `<!-- VD: Nhóm 1 -->`        |
-| **Lớp**      | `<!-- VD: SE001.P11 -->`     |
-| **Học kỳ**   | `<!-- VD: HK2 2025-2026 -->` |
+| **Tên nhóm** | Group 19        |
+| **Lớp**      | Class 2     |
+| **Học kỳ**   | 2nd semester 2025-2026 |
 
 | #   | MSSV | Họ và tên | Vai trò     |
 | --- | ---- | --------- | ----------- |
