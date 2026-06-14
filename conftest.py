@@ -14,7 +14,6 @@ SCREENSHOT_DIR = os.path.join(os.path.dirname(__file__), "screenshots")
 os.makedirs(SCREENSHOT_DIR, exist_ok=True)
 
 
-# ---------------------------------------------------------------------------
 # Smart Wait — Chờ thông minh (thay vì time.sleep)
 # ---------------------------------------------------------------------------
 # Playwright hỗ trợ auto-wait cho hầu hết thao tác (click, fill, assert).
@@ -26,8 +25,8 @@ os.makedirs(SCREENSHOT_DIR, exist_ok=True)
 #   page.locator("...").wait_for(timeout=5000)     # Chờ element cụ thể
 #
 # ❌ Tránh dùng:
-#   time.sleep(3)    # Hard sleep — chậm, không ổn định (flaky)
-# ---------------------------------------------------------------------------
+#   time.sleep(3)    # Hard sleep — chậm, không ổn định 
+
 
 
 def wait_for_flutter(page, text=None, selector=None, timeout=10000):
