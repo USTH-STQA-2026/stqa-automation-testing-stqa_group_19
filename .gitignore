@@ -4,12 +4,6 @@ __pycache__/
 *.pyc
 .pytest_cache/
 
-# Environment
-.env
-
-# Screenshots
-screenshots/
-
 # IDE
 .vscode/
 .idea/
